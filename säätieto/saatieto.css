@@ -1,0 +1,104 @@
+
+body{
+  background-color: rgb(220, 254, 255);
+}
+
+.divbox {
+    text-align: left;
+    padding: 10px;
+  }
+.kuvat {
+  height: auto;
+  width: 11%;
+  object-fit: cover;
+}
+
+.nytlämpö{
+  font-size: 160%;
+  color: rgb(213, 23, 23);
+  /*-webkit-text-stroke: 1px black;*/
+}
+
+.teksti
+{
+    color: rgb(0, 0, 0);
+    /*-webkit-text-stroke: 1px black;*/
+}
+
+.search-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 500;
+  gap: .25rem;
+
+}
+
+input {
+  font-size: 1rem;
+}
+
+.searchdiv{
+  position: relative;
+  display: inline-block;
+}
+
+
+.lista-item{
+  background-color: white;
+  padding: 1rem;
+  border-bottom: 1px solid gray;
+}
+/*.lista{
+  justify-content: left;
+  background-color: #fdfdfd;
+  max-width: 500;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.7);
+  
+
+  min-width: 200;
+  position: relative;
+  display: inline-block;
+
+}*/
+.lähdeboxi{
+  position:absolute;
+  bottom:0;
+  right:0;
+  float: left;
+ 
+}
+.lista {
+  display: none;
+  position: absolute;
+  top:30px;
+  background-color: #fdfdfd;
+  list-style-type: none;
+  justify-content: left;
+  min-width: 300px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  padding-left: 0;
+  
+  
+}
+
+.lista a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  
+}
+
+.lista-item li {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  
+}
+.lista li:hover {background-color: #ddd;}
+.lista-item li:hover {background-color: #e11515;}
+.lista {display: block;background-color: #ffffff;}
+.list-item:hover .list-item{background-color: #3e8e41;}
+.lista a:hover {background-color: blueviolet;}

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="fi-FI">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" type="text/css" href="saatieto.css" />
+
+    </head>
+    <body>
+       
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <div class="cont" style="display: flex; margin: auto;justify-content: center">
+            <div style="display: compact;width:100%;max-width:800px;"> 
+                <h1 class="teksti"> Säätiedot</h1>
+                
+                <div class="searchdiv" style="width:100%;max-width:400px;">
+                    <div class="search-wrapper">
+                        <label for="search">Etsi kaupunki</label>
+                        <input type="search" id="search" data-search>
+                        <ul class="lista" id="kaupunkilista"> 
+                        </ul>
+                    </div>
+              </div>
+
+                <h1 id="kaupunkiteksti"> Etsi kaupunki</h1>
+                <div style="display: flex; justify-content: left " class="grid-container">
+                    <img id="nytsääkuva" src="kuvat/aurinko.png">
+                    <div class="divbox">
+                        <p id="nytsääteksti" class="nytlämpö"> :)</p>
+                        <p id="nyttuntuu" class="teksti">Toivottavasti on mukava keli!</p>
+                    </div>
+                </div>
+                <div id="säänäytönosat" >
+                    <canvas id="myChart" style="width:100%;max-width:700px;max-height: 300px;"> ITSE SÄÄ NÄYTTÖ </canvas>
+                    <div id="sääkuvat" class="sääkuvat" ></div>
+                    <div id="tuulikuvat" class="sääkuvat"></div>
+                    <div>
+                        <img id="tajunnanräjäyttäjä" src="./kuvat/divaideri.png">
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div id="lähteet" class="lähdeboxi" style= "display: flex; width: 100%; height: 10%;  justify-content: right">
+            <div>
+
+            </div>
+            <div style="justify-content: right">
+            <p style="font-size: 50%;  color: gray">Säätiedot: Open-meteo </p>
+            <p style="font-size: 50%; color: gray">Kuvat: marcos101 via Pixabay  </p>
+            </div>
+        </div>
+        <script>
+            console.log("Hello world from javascript!");
+
+            // Miten suunnitellaan?
+            // YLÄTASON SUUNNITTELU
+            // 1. Visio eli mitä ollaan tekemässä? (suomeksi johtotähti)
+            // Tämä on AINA ensimmäinen kysymys!
+            // Mitä yleensä halutaan saada aikaan...
+            /*
+            Halutaan tehdä ohjelma, joka hakee säätiedot avoimesta lähteestä.
+            Säätiedot luetaa. https://openweathermap.org/current https://open-meteo.com/
+            Varmaan kannattaa käyttää meteoo koska ei tarvita Api-keytä. Openweathermappiin tarvitsee apikeyn
+
+            Mietin vielä mitä kaikkia tarvitsen näytön tekoon
+            https://api.open-meteo.com/v1/forecast?latitude=62.89&longitude=27.68&hourly=temperature_2m,precipitation_probability,precipitation,windspeed_10m
+            
+            Kuopiosta lämpötila, tuntuukuin lämpötila, sateen mahdollisuus, sateen määrä, pilvisyys ja tuulennopeus vaihdetaan, weathercode
+            https://api.open-meteo.com/v1/forecast?latitude=62.89&longitude=27.68&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,cloudcover,windspeed_10m
+            Tarvitsenkin ton weathercoden voe hitto mua
+            https://api.open-meteo.com/v1/forecast?latitude=62.89&longitude=27.68&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weathercode,cloudcover,windspeed_10m&current_weather=true
+
+            Tiedot tulee oliona, jossa tiedot arrayna
+            Data alkaa haetun päivän timestamp 0000 gmt0
+            Sään aika tulee gmt+0 käytä https://stackoverflow.com/questions/1091372/getting-the-clients-time-zone-and-offset-in-javascript 
+            Tarvitsen katsojan ajan ja siitä floor.
+            Etsitään saman ajan säätieto näytille
+            Otetaan ajasta xmäärä tulevia säätietoja ja esitetään ne.
+            Säätiedot näytetää. https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial
+
+            
+            04.05.2023 seuraavaksi opettele canvaksen käyttöä. Missä muodossa tarvitsen datan, että voin tehdä viivoja tai muuta vastaavaa.
+            Graafinen näyttö jotain  viivoja tulevasta säästä.
+            w3schoolin neuvot
+            https://www.w3schools.com/ai/ai_chartjs.asp
+            toinen chartti hommeli
+            https://www.chartjs.org/docs/latest/charts/mixed.html
+            
+            Ilmaiset kuvat projektiin by marcos101 via Pixabay
+            https://pixabay.com/vectors/sun-clouds-the-time-darling-sea-4925768/
+
+            Jos tekis vielä interaktiivisen paikkahaun
+            funktio millä sää näytetään lopulta.
+
+
+            Tulevan sään mukaan pientä vaate ehdotusta.??
+
+            */
+
+            // 2. Suunnittelu yleistasolla
+            // Lähestymistapoja on yleensä kaksi:
+            // a) käyttöliittymä eli mitä käyttäjä tekee?
+            // b) data eli mitä halutaan kerätä/jalostaa/tallettaa?
+            // Tavoite on aina että tiedetään mitä tehdään missäkin vaiheessa
+
+            // 3. Käyttäjän toiminta ja yleinen "use case"
+            // use case sanoo mitä käyttäjä tekee
+            // Tällöin nähdään ohjelman toiminnnan askeleet
+
+            // ALATASON SUUNNITTELU
+            
+            // 4. Mieti ohjelmarunko
+            // Yleensä kannattaa ohjelmoida aina samalla tavalla
+            // Koodari ja/tai yrityskohtainen asia
+            // Esimerkiksi:
+            // Kirjastot ja Modulit
+            
+            // Vakiot
+            // Muuttujat
+            let offset = new Date().getTimezoneOffset();
+            let haettudata;
+            let lämpötila= [];
+            let haluttusade=[];
+            let haluttuaika=[];
+            let haluttusuhteellinenlämpötila=[];
+            let haluttusääntila= [];
+            let haluttutuulentila=[];
+            let haluttutuulennopeus=[];
+            let kuvalista=[];
+            let tuulikuvalista=[];
+            let haluttutunti=[];
+            let ajanpituus = 8;
+            let indexinetsintä=[];
+            let chartreset=0;
+            let myChart;
+
+            //search funktioiden toimintaan
+            const searchInput = document.querySelector("[data-search]")
+            const kaupunkilista = document.getElementById("kaupunkilista");
+            let haetutkaupungit= [];
+            let kaupunginlat = 0;
+            let kaupunginlong = 0;
+            
+
+            // Konteksti näytön ja koodin välillä
+            const säänäyttö = document.getElementById("säänäyttö");
+            const nytsääkuva = document.getElementById("nytsääkuva");
+            const nytsääteksti = document.getElementById("nytsääteksti");
+            const nyttuntuu = document.getElementById("nyttuntuu");
+            const sääkuvat = document.getElementById("sääkuvat");
+            const kaupunkiteksti = document.getElementById("kaupunkiteksti");
+            // Luokat ja Oliot
+            // Funktiot
+
+            //funktio ajan muutttamiseen tasatunneiksi
+            function floorMinutes(date) {
+            date.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
+            return date;
+            }
+            //tarvitsen funktion arrayden tuhoamiseen uutta hakua varten
+            function resetarrays(){
+                haettudata;
+                lämpötila= [];
+                haluttusade=[];
+                haluttuaika=[];
+                haluttusuhteellinenlämpötila=[];
+                haluttusääntila= [];
+                kuvalista=[];
+                tuulikuvalista=[];
+                haluttutunti=[];
+                haluttutuulentila=[];
+                haluttutuulennopeus=[];
+            }
+            //funktio mikä etsii oikean kuvan weathercodea vastaan
+            //en uskalla rikkoa, särkyy kummiskin kaikki
+            //poista sääkuvamalli 1,2 kun testaukset onnistunu
+          
+            function sääkuvanmalli3(hakukohde){
+            //haluasin näyttää tämänhetkisen tilanteen(aurinkoista, pilvistä, sataako yms.)(tuleeko joku if helvetti? minun taidoilla joo)
+            //console.log(`tässä lähteny sääkuvamalli2 hakukohde${hakukohde}, mikä otetaa kuvakohteeksi ${hakukohde}`)
+            //HUOM MAHDOLLISESTI JOKU VIKA TÄÄLLÄ! ANTOI KERRAN UNDEFINED KUVAN! -----------------------
+            switch (hakukohde){
+                case 0: 
+                return "./kuvat/aurinko.png";
+                    break;
+                case 1:
+                return"./kuvat/puolipilvi.png";
+                    break;
+                case 2:
+                return"./kuvat/2pilveä.png";
+                    break;
+                case 3:
+                return"./kuvat/pilvi.png";
+                    break;
+                case 45:
+                case 48:
+                return"./kuvat/sumu1.png";
+                    break;
+                case 51:
+                case 53:
+                case 55:
+                return"./kuvat/sade1.png";
+                    break;
+                case 56:
+                case 57:
+                return"./kuvat/loskaa.png";
+                    break;
+                case 61:
+                case 63:
+                return"./kuvat/sade2.png";
+                    break;
+                case 65:
+                return"./kuvat/sade.png";
+                    break;
+                case 66:
+                case 67:
+                return"./kuvat/loskaa.png";
+                    break;
+                case 71:
+                case 73:
+                case 75:
+                case 77:
+                return"./kuvat/lumisade.png";
+                    break;
+                case 80:
+                case 81:
+                case 82:    
+                return"./kuvat/sade.png";
+                    break;
+                case 85:
+                case 86:
+                return"./kuvat/lumisade.png";
+                    break;
+                case 95:
+                case 96: 
+                case 99:
+                return"./kuvat/ukkostasadetta.png";
+                    break
+            }
+            }
+
+            function tuulikuvamalli(aste){
+            //haluasin näyttää tämänhetkisen tilanteen(aurinkoista, pilvistä, sataako yms.)(tuleeko joku if helvetti? minun taidoilla joo)
+            //console.log(`tässä lähteny sääkuvamalli2 hakukohde${hakukohde}, mikä otetaa kuvakohteeksi ${hakukohde}`)
+            
+            if (aste<22.5 || aste>337.5){
+                return "./kuvat/nuolet/pohjoinen.png";
+            }
+            else if( aste>22.5 && aste<67.5){
+                return"./kuvat/nuolet/koillinen.png";
+            }
+            else if( aste>67.5 && aste<112.5){
+                return"./kuvat/nuolet/itä.png";
+            }
+            else if( aste>112.5 && aste<157.5){
+                return"./kuvat/nuolet/kaakko.png";
+            }
+            else if( aste>157.5 && aste<202.5){
+                return"./kuvat/nuolet/etelä.png";
+            }
+            else if( aste>202.5 && aste<247.5){
+                return"./kuvat/nuolet/lounas.png";
+            }
+            else if( aste>247.5 && aste<292.5){
+                return"./kuvat/nuolet/länsi.png";
+            }
+            else if( aste>292.5 && aste<337.5){
+                return"./kuvat/nuolet/luode.png";
+            }
+
+
+            /*
+            switch (hakukohde){
+                case hakukohde<90 && hakukohde>270: 
+                return "./kuvat/nuolet/pohjoinen.png";
+                    break;
+                case 1:
+                return"./kuvat/nuolet/koillinen.png";
+                    break;
+                case 2:
+                return"./kuvat/nuolet/itä.png";
+                    break;
+                case 3:
+                return"./kuvat/nuolet/kaakko.png";
+                    break;
+                case 45:
+                case hakukohde>90 && hakukohde<270:
+                return"./kuvat/nuolet/etelä.png";
+                    break;
+                case 51:
+                case 55:
+                return"./kuvat/nuolet/lounas.png";
+                    break;
+                case 56:
+                case 57:
+                return"./kuvat/nuolet/länsi.png";
+                    break;
+                case 66:
+                case 67:
+                return"./kuvat/nuolet/luode.png";
+                    break;
+
+                }*/
+            }
+
+
+
+            // Event handlerien asetukset
+            searchInput.addEventListener("input", e => {
+                const value = e.target.value.toLowerCase();
+                let urli = `https://geocoding-api.open-meteo.com/v1/search?name=${value}&count=10&language=en&format=json`
+                //console.log(urli)
+                fetch(urli)
+                    .then((response) => {
+                        console.log(response);
+                        // palautetaan vastaus muutettuna json objektiksi
+                        return response.json();
+                    })
+                    .then((response) => {
+                       //poistetaan vanhat eka
+                        kaupunkilista.innerHTML=``;
+                        console.log(response);
+                        haetutkaupungit=response;
+                        //console.log("haetutkaupungit alla");
+                        //console.log(haetutkaupungit);
+                        //generoidaan lista 
+                        haetutkaupungit.results.forEach((element,index) => {
+                            let node = document.createElement("li");
+                            
+                            node.setAttribute("id",("li"+index));
+                            node.setAttribute("class","list-item");
+                            let textnode = document.createTextNode(element.name+" "+element.country);
+                            let kaupunginnimi= element.name;
+                            node.appendChild(textnode);
+                            document.getElementById("kaupunkilista").appendChild(node);
+                            let nodenlat=element.latitude;
+                            let nodenlong=element.longitude;
+                            node.addEventListener("click", ()=> {
+                                resetarrays();
+                                //console.log(nodenlat,nodenlong);
+                                kaupunginlat = nodenlat.toFixed(2);
+                                kaupunginlong = nodenlong.toFixed(2);
+                                //console.log("----------------kaupunkinimi---------")
+                                //console.log(kaupunginnimi);
+                                //console.log(textnode);
+                                kaupunkiteksti.innerText=kaupunginnimi;
+                                kaupunkilista.innerHTML=``;
+                                säänhaku();
+                            })
+
+                        });
+                    })
+  
+                })
+            // Datan haku
+            // (koodi)
+
+            //javascriptin muistiinpanoista otettua koodia 
+            //kokeilen pystynkö nopeasti muokkaamaan tätä haluamakseni
+            function säänhaku(){
+            let linkki = `https://api.open-meteo.com/v1/forecast?latitude=${kaupunginlat}&longitude=${kaupunginlong}&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weathercode,cloudcover,windspeed_10m,winddirection_10m&current_weather=true`;
+            fetch(linkki, { mode: 'cors' })
+            .then((response) => {
+                console.log(response);
+                // palautetaan vastaus muutettuna json objektiksi
+                return response.json();
+            })
+            .then((response) => {
+
+              
+                // tämän pitäisi näyttää json tieto javascript oliona
+                console.log(response);
+                haettudata=response;
+                haettudata.hourly.time2 = [];
+                //haluan jokaiselle gmt0 ajalle lisätä offset ajan saaden omanpaikkani ajan
+                //https://stackoverflow.com/questions/17545708/parse-date-without-timezone-javascript
+                //aikaa tämän oikean correctdaten tekemiseen 2h.
+                //nyt time2 on oikea aikaleima jokaista mittadataa kohden.
+            haettudata.hourly.time.forEach(element => {
+                let date = new Date(element);
+                //console.log(element+"luettudata");
+                //console.log(date);
+                var userTimezoneOffset = date.getTimezoneOffset() * 60000;
+                let correctdate = new Date(date.getTime() - userTimezoneOffset);
+                //console.log(correctdate);
+                haettudata.hourly.time2.push(correctdate);
+            });
+
+
+            //console.log(haettudata.hourly.time2)
+            
+            let paivamaarapitka = new Date();
+           floorMinutes(paivamaarapitka);
+           //console.log("tehtypaivamaara")
+           //console.log(paivamaarapitka);
+            //HELVETTI päivämäärä ei ole kunnollinen numero, joten tehdään päivämääristä stringit, joita verrataan
+            haettudata.hourly.time2.forEach((element,index)=>{
+                //console.log(element);
+                if (String(element)==String(paivamaarapitka)){
+                    //console.log("numeroita löytyi")
+                    indexinetsintä=index;
+                }
+            })
+            /*
+            console.log("yritän etsiä tunniltani arrayn indexiä");
+            console.log(indexinetsintä);
+
+            console.log(haettudata.hourly.time2[indexinetsintä]);
+            console.log(haettudata.hourly.temperature_2m[indexinetsintä]);*/
+            //haen halutut tunnit ja niille kuuluvat datat täällä
+            for(let iter=0;ajanpituus>iter;iter++){
+                //console.log(haettudata.hourly.time2[indexinetsintä+iter]);
+                haluttuaika.push(haettudata.hourly.time2[indexinetsintä+iter]);
+                haluttusade.push(haettudata.hourly.precipitation[indexinetsintä+iter]);
+                //console.log(haettudata.hourly.temperature_2m[indexinetsintä+iter]);
+                lämpötila.push(haettudata.hourly.temperature_2m[indexinetsintä+iter]);
+                haluttusuhteellinenlämpötila.push(haettudata.hourly.apparent_temperature[indexinetsintä+iter]);
+                haluttusääntila.push(haettudata.hourly.weathercode[indexinetsintä+iter]);
+                haluttutuulentila.push(haettudata.hourly.winddirection_10m[indexinetsintä+iter])
+                haluttutuulennopeus.push((haettudata.hourly.windspeed_10m[indexinetsintä+iter]/3.6).toFixed(0))
+            }
+            //
+            console.log("tarkistetaan weathercodet")
+            console.log(haluttusääntila);
+            console.log("tarkistetaan sade määrät")
+            console.log(haluttusade);
+            //tehdään lista tunneista graafia varten
+            haluttuaika.forEach(element => {
+                haluttutunti.push(element.getHours());
+            });
+            /*
+            console.log(haluttuaika);
+            console.log(haluttutunti);
+            console.log(lämpötila)*/
+            //näytetään lämpötila apparent_temperature
+            //täytyy miettiä uusiksi, meoteossa on mahdollisuus tämänhetkiselle datalle
+            nytsääteksti.innerText = haettudata.current_weather.temperature+" °C";
+            nyttuntuu.innerText = `Sääennusteista laskettu suhteellinen lämpötila: 
+            `+haettudata.hourly.apparent_temperature[indexinetsintä]+" °C";
+            
+
+            //vaihdetaan sääkuvaa kuvaamaan tämänhetkistä tilannetta
+            //sääkuvanmalli(haettudata.hourly.weathercode,nytsääkuva);
+            nytsääkuva.src = sääkuvanmalli3(haettudata.current_weather.weathercode);
+            
+            //Tehdään kuvista lista ja näytetään kuvat sivulla. Ei skaalannut canvaksen mukana mitenkään järkevästi div boxeja räpeltämällä
+            //Uusi lähestyminen https://www.youtube.com/watch?v=K82by9-C4I0 avulla, vittu mää mitää ymmärrä. 
+            haluttusääntila.forEach((element,index)=>{
+                    kuvalista.push(sääkuvanmalli3(element));
+            })
+            haluttutuulentila.forEach((element,index)=>{
+                    tuulikuvalista.push(tuulikuvamalli(element));
+            })
+            console.log("kuvalista tehtynä, onko ok?");
+            console.log(kuvalista);
+            console.log(tuulikuvalista);
+
+            //tutoriaalin perusteella otettu palanen, mutta ei toimi suoraan jonkun helvetin takia
+            //syy taisi olla paddingin ja kuvalistan teossa. Tein kuvalistan uusiksi ja sitten syötin tähän
+            const imageItems = {
+                    id: "imageItems",
+                    beforeDatasetsDraw(chart, args, pluginsOptions){
+                        const { ctx, options, scales:{x, y}}= chart;
+                        ctx.save();
+                        const imageSize = options.layout.padding/3;
+
+                        kuvalista.forEach((imageLink, index)=>{
+                            //testausta miksi tämä ei taas syö näitäääääää
+                            //console.log(imageLink + index);
+                            const logo = new Image();
+                            logo.src = imageLink;
+                            //ongelma täällä?
+                            //console.log(logo);
+                            //määritetään kuvan paikka minnekkä se piirretään
+                            ctx.drawImage(logo, x.getPixelForValue(index)-imageSize/2, myChart.height-imageSize*3, imageSize, imageSize)
+                        })
+                        tuulikuvalista.forEach((imageLink, index)=>{
+                            const logo = new Image();
+                            logo.src = imageLink;
+                            //määritetään kuvan paikka minnekkä se piirretään
+                        ctx.drawImage(logo, x.getPixelForValue(index)-imageSize/2, myChart.height-imageSize, imageSize, imageSize)
+
+                        })
+                     }
+                    
+            }
+
+            //yritän käyttää sublabeleita kirjoittamaan tuulennopeuksia
+            const subLabels ={
+                id:'subLabels',
+                afterDatasetsDraw(chart, args, pluginsOptions){
+                    const {ctx, options, scales:{x, y}} = chart;
+                    ctx.save();
+                    const imageSize = options.layout.padding/3;
+
+                    haluttutuulennopeus.forEach((element,index)=>{
+                        ctx.fillText(element+"m/s", x.getPixelForValue(index)-imageSize/2, myChart.height-imageSize*1.5, imageSize, imageSize,)
+
+                    })
+                 
+                }
+
+            }
+        
+
+
+
+            //kuvaaajan tekemiset aloitetaan täällä
+            const config ={
+                data: {
+                    datasets: [{
+                        type: 'bar',
+                        label: 'Sateenmäärä',
+                        yAxisID: `sade`,
+                        data: haluttusade,
+                    }, {
+                        type: 'line',
+                        label: 'Lämpötila',
+                        yAxisID: `lämpö`,
+                        data: lämpötila,
+                    }],
+                    //x-akselin jutut
+                    labels: haluttutunti,
+                },
+                //Optionssit graafeille. Vaikeaaa....
+                options: {
+                    plugins:{legend: {display: true, labels:{boxWidth: 30,} },},
+                    layout:{
+                            padding: 60,
+                        },
+                    
+                    scales: {
+                    sade: {
+                        type: 'linear',
+                        position: 'right',
+                        suggestedMax: 14,
+                        ticks: {
+                            beginAtZero: true,
+                            steps: 10,
+                            stepValue: 1,
+                            max: 20,
+                            min: 0,
+                            callback: function(value, index, values){
+                                return `${value} mm`
+                            }
+                        },
+                        grid: {
+                         drawOnChartArea: false, // only want the grid lines for one axis to show up
+                         },
+                    }, 
+
+                    lämpö:{
+                        id: 'lämpö',
+                        type: 'linear',
+                        position: 'left',
+                        ticks: {
+                            precision: 0,
+                            stepValue:1,
+                            callback: function(value, index, values){
+                            return `${value} °C`
+                            }
+                            }   
+                        }
+                    }
+                    
+                },
+                plugins: [imageItems, subLabels],
+                
+            };
+            
+              //haluaisin resetata canvaksen jokaista piirtoa kohden
+            if (chartreset===1){
+                myChart.destroy();
+
+                chartreset=0;
+            }
+               
+            myChart = new Chart(
+                document.getElementById('myChart'),
+                
+                config
+              );
+            chartreset=1;
+            } 
+            
+            //piirron jälkeen tyhjennetää
+
+
+            );
+        }
+
+
+        </script>
+    </body>
+
+</html>
